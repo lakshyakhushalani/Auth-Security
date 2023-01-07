@@ -3,8 +3,11 @@ const ejs=require("ejs");
 const bodyparser=require("body-parser");
 const mongoose=require("mongoose");
 const  encrypt=require('mongoose-encryption');
+require("dotenv").config();
 const app=express();
 const Schema=mongoose.Schema;
+
+console.log(process.env.API_KEY);
 
 mongoose.set('strictQuery', true)
 
@@ -23,8 +26,7 @@ const xxx=new Schema(
 )
 
 //encrypting password  --this must be done beofre making a collection using mongoose.model
-const secret="thisisourlittlesecret";
-xxx.plugin(encrypt,{ secret:secret, encryptedFields : ["password"] });
+xxx.plugin(encrypt,{ secret:process.env.SECRET, encryptedFields : ["password"] });
 
 //making collection
 const users=new mongoose.model("users",xxx);
