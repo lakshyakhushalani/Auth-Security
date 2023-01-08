@@ -3,11 +3,11 @@ const ejs=require("ejs");
 const bodyparser=require("body-parser");
 const mongoose=require("mongoose");
 const  encrypt=require('mongoose-encryption');
+const bcrypt=require("bcrypt");
 require("dotenv").config();
 const app=express();
 const Schema=mongoose.Schema;
 
-console.log(process.env.API_KEY);
 
 mongoose.set('strictQuery', true)
 
@@ -45,20 +45,24 @@ app.get("/register",(req,res)=>{
     res.render("register");
 })
 
+
+const salt_rounds=12;
 app.post("/register",(req,res)=>{
   const Email=req.body.username;
   const Password=req.body.password;
 
-  const newuser=new users({
-    email:Email,
-    password:Password
+  bcrypt.hash(Password,salt_rounds,(err,hashed_password)=>{
+    const newuser=new users({
+      email:Email,
+      password:hashed_password
+    });
+    newuser.save( (err)=>{
+      if(err) res.send("Not Register");
+      else res.render("secrets");
+    } )
   });
-  newuser.save( (err)=>{
-    if(err) res.send("Not Register");
-    else res.render("secrets");
-  } )
 
-})
+});
 
 app.post("/login",(req,res)=>{
   const Email=req.body.username;
@@ -69,8 +73,10 @@ app.post("/login",(req,res)=>{
     if(err) console.log(err);
     else
      {
-        if(found){if(found.password===Password) res.render("secrets");
-        else res.send("Incorrect Password");}
+        bcrypt.compare(Password,found.password,(err,response)=>{
+          if(err) res.send("Password incorrect");
+          else res.render("secrets");
+        })
      }
   })
 })
